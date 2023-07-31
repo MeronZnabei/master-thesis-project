@@ -125,6 +125,8 @@ def parallel_plots_many_policies(
         # Column 'egypt_low_had' does not exist, so we skip the operation
         pass
 
+    norm_df, desirability_couples = normalize_objs(obj_df, directions)
+
     uds = []  # undesired
     ds = []  # desired
     for i in desirability_couples:

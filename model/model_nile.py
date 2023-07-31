@@ -183,7 +183,7 @@ class ModelNile:
         t0_ethio_agg_hydro = self.reservoirs["GERD"].actual_hydropower_production[0]
 
         origins = [t0_egypt_agg_def, t0_egypt_90perc, t0_egypt_freq_lowHAD, t0_sudan_agg_def, t0_sudan_90perc, t0_ethio_agg_hydro]
-
+        print(origins)
         objectives_norm = [((a - b) / b) if b != 0 else a for a, b in zip(objectives, origins)]# gemiddelde procentuele toename ten opzichte van t=0
         
         if not self.principle:
