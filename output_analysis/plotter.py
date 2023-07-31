@@ -118,9 +118,12 @@ def parallel_plots_many_policies(
     names = list(obj_df.columns)
 
     objectives_df = obj_df.copy()
-    objectives_df.egypt_low_had = 100 * (objectives_df.egypt_low_had)
-
-    norm_df, desirability_couples = normalize_objs(objectives_df, directions)
+    try:
+        # Perform the desired operation on the column
+        objectives_df["egypt_low_had"] = 100 * objectives_df["egypt_low_had"]
+    except KeyError:
+        # Column 'egypt_low_had' does not exist, so we skip the operation
+        pass
 
     uds = []  # undesired
     ds = []  # desired
