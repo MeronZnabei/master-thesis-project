@@ -131,9 +131,12 @@ def parallel_plots_many_policies(
     norm_df["Name"] = "All Solutions"
     for i, solution_index in enumerate(solution_indices):
         norm_df.loc[solution_index, "Name"] = solution_names[i]
-        norm_df = norm_df.append(norm_df.loc[solution_index, :].copy())
+    # for i, solution_index in enumerate(reversed(solution_indices)):
+    #     norm_df.loc[solution_index, "Name"] = solution_names[-i - 1]
+        # norm_df = norm_df.append(norm_df.loc[solution_index, :].copy())
     
-    norm_df
+    print(norm_df["Name"].unique())
+    norm_df.sort_values(by="Name", inplace=True)
 
     fig = plt.figure()
 
@@ -155,6 +158,7 @@ def parallel_plots_many_policies(
         linewidth=7,
         alpha=0.8,
     )
+    print("I'm here")
     handles, labels = plt.gca().get_legend_handles_labels()
     handles_dict = dict(zip(labels, handles))
     labels = ["All Solutions"] + solution_names

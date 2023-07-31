@@ -10,10 +10,10 @@ if __name__ == '__main__':
     DEBUG = True
     if DEBUG:
         nfe = 5000
-        epsilon_list = [1e-2, 1e-4, 1e-4, 1e-2, 1e-4, 1e-2, 1e-2]
-        convergence_freq = 250
-        description = "uwf"
-        principle = "uwf"           # possible principles uwf, swf, pwf, gini
+        epsilon_list = [1e-1, 1e-1, 1e-1, 1e-1, 1e-1, 1e-1, 1e-1]
+        convergence_freq = 100
+        description = "gini_big"
+        principle = "gini"           # possible principles uwf, swf, pwf, gini
     else:
         # Access the environment variables for input parameters
         nfe = int(os.environ.get("NFE"))
