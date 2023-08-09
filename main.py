@@ -7,7 +7,7 @@ from experimentation import baseline_optimization
 
 if __name__ == '__main__':
 
-    DEBUG = True
+    DEBUG = False
     if DEBUG:
         nfe = 5000
         epsilon_list = [1e-1, 1e-1, 1e-1, 1e-1, 1e-1, 1e-1, 1e-1]
