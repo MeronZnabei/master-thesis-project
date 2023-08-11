@@ -186,8 +186,8 @@ class ModelNile:
         print(origins)
         objectives_norm = [((a - b) / b) if b != 0 else a for a, b in zip(objectives, origins)]# gemiddelde procentuele toename ten opzichte van t=0
         
-        if not self.principle:
-            principle_result = 0
+        if self.principle == "None":
+            principle_result = None
         elif self.principle == "uwf":
             principle_result = sum(objectives_norm)
         

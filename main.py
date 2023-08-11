@@ -7,13 +7,13 @@ from experimentation import baseline_optimization
 
 if __name__ == '__main__':
 
-    DEBUG = False
+    DEBUG = True
     if DEBUG:
-        nfe = 5000
-        epsilon_list = [1e-1, 1e-1, 1e-1, 1e-1, 1e-1, 1e-1, 1e-1]
-        convergence_freq = 100
-        description = "gini_big"
-        principle = "gini"           # possible principles uwf, swf, pwf, gini
+        nfe = 3
+        epsilon_list = [1e-1, 1e-1, 1e-1, 1e-1, 1e-1, 1e-1]     # delete/add an epsilon when switched from None to principle
+        convergence_freq = 1
+        description = "None_big"
+        principle = "None"           # possible principles uwf, swf, pwf, gini, None
     else:
         # Access the environment variables for input parameters
         nfe = int(os.environ.get("NFE"))

@@ -123,8 +123,11 @@ def run(nfe:int, epsilon_list:list, convergence_freq:int, description:str, princ
         ScalarOutcome("sudan_irr", ScalarOutcome.MINIMIZE),
         ScalarOutcome("sudan_90", ScalarOutcome.MINIMIZE),
         ScalarOutcome("ethiopia_hydro", ScalarOutcome.MAXIMIZE),
-        ScalarOutcome("principle_result", ScalarOutcome.MAXIMIZE),
     ]
+    if principle != "None":
+        em_model.outcomes.extend(   # extend function used instead of append, since em_model.outcomes refers to an instance of the NamedObjectMap class
+        ScalarOutcome("principle_result", ScalarOutcome.MAXIMIZE)
+        )
 
     convergence_metrics = [
         EpsilonProgress(),
