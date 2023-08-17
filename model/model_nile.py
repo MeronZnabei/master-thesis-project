@@ -138,7 +138,6 @@ class ModelNile:
         self.reset_parameters()
         # self = generate_input_data(self, **uncertainty_dict)
         self.overarching_policy.assign_free_parameters(parameter_vector)
-        print("New simulation")
         self.simulate()
 
         bcm_def_egypt = [

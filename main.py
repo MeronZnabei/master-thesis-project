@@ -7,9 +7,9 @@ from experimentation import baseline_optimization
 
 if __name__ == '__main__':
 
-    DEBUG = True
+    DEBUG = None
     if DEBUG:
-        nfe = 3
+        nfe = 1
         epsilon_list = [1, 1e-1, 1e-1, 1, 1e-1, 1]     # delete/add an epsilon when switched from None to a principle
         convergence_freq = 1
         description = "None_biggest"
