@@ -176,10 +176,10 @@ class ModelNile:
         objectives = [egypt_agg_def, egypt_90_perc_worst, egypt_freq_low_HAD, sudan_agg_def, sudan_90_perc_worst, ethiopia_agg_hydro]
 
         # values at timestep 0 used for normalization
-        y0_egypt_agg_def = sum(self.irr_districts["Egypt"].deficit[:12]) / 12 # the mean of the first year 
+        y0_egypt_agg_def = sum(self.irr_districts["Egypt"].deficit[:12])/12 # the mean of the first year 
         y0_egypt_90perc = y0_egypt_agg_def
         y0_egypt_freq_lowHAD = 0.000001
-        y0_sudan_agg_def = sum(sudan_agg_def_vector[:12]/12
+        y0_sudan_agg_def = sum(sudan_agg_def_vector[:12])/12
         y0_sudan_90perc = y0_sudan_agg_def
         y0_ethio_agg_hydro = sum(self.reservoirs["GERD"].actual_hydropower_production[:12])/12
 
