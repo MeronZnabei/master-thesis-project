@@ -138,11 +138,12 @@ class ModelNile:
         self.reset_parameters()
         # self = generate_input_data(self, **uncertainty_dict)
         self.overarching_policy.assign_free_parameters(parameter_vector)
+        print("New simulation")
         self.simulate()
 
         bcm_def_egypt = [
             month * 3600 * 24 * self.nu_of_days_per_month[i % 12] * 1e-9
-            for i, month in enumerate(self.irr_districts["Egypt"].deficit)
+            for i, month in enumerate(self.irr_districts["Egypt"].deficit) # i = 12*20, month = deficit in that month
         ]
 
         egypt_agg_def = np.sum(bcm_def_egypt) / 20
@@ -175,14 +176,14 @@ class ModelNile:
         objectives = [egypt_agg_def, egypt_90_perc_worst, egypt_freq_low_HAD, sudan_agg_def, sudan_90_perc_worst, ethiopia_agg_hydro]
 
         # values at timestep 0 used for normalization
-        t0_egypt_agg_def  = self.irr_districts["Egypt"].deficit[0]
-        t0_egypt_90perc = t0_egypt_agg_def
-        t0_egypt_freq_lowHAD = 0.000001
-        t0_sudan_agg_def = sudan_agg_def_vector[0]
-        t0_sudan_90perc = t0_sudan_agg_def
-        t0_ethio_agg_hydro = self.reservoirs["GERD"].actual_hydropower_production[0]
+        y0_egypt_agg_def = sum(self.irr_districts["Egypt"].deficit[:12]) / 12 # the mean of the first year 
+        y0_egypt_90perc = y0_egypt_agg_def
+        y0_egypt_freq_lowHAD = 0.000001
+        y0_sudan_agg_def = sum(sudan_agg_def_vector[:12]/12
+        y0_sudan_90perc = y0_sudan_agg_def
+        y0_ethio_agg_hydro = sum(self.reservoirs["GERD"].actual_hydropower_production[:12])/12
 
-        origins = [t0_egypt_agg_def, t0_egypt_90perc, t0_egypt_freq_lowHAD, t0_sudan_agg_def, t0_sudan_90perc, t0_ethio_agg_hydro]
+        origins = [y0_egypt_agg_def, y0_egypt_90perc, y0_egypt_freq_lowHAD, y0_sudan_agg_def, y0_sudan_90perc, y0_ethio_agg_hydro]
         objectives_norm = [((a - b) / b) if b != 0 else a for a, b in zip(objectives, origins)]# gemiddelde procentuele toename ten opzichte van t=0
         
         if self.principle == "None":
@@ -447,23 +448,23 @@ class ModelNile:
         """
         return max(0, target - realisation)
 
-    @staticmethod
-    def squared_deficit_from_target(realisation, target):
-        """
-        Calculates the square of a deficit given the realisation of an
-        objective and the target
-        """
-        return pow(max(0, target - realisation), 2)
+    # @staticmethod
+    # def squared_deficit_from_target(realisation, target):
+    #     """
+    #     Calculates the square of a deficit given the realisation of an
+    #     objective and the target
+    #     """
+    #     return pow(max(0, target - realisation), 2)
 
-    @staticmethod
-    def squared_deficit_normalised(sq_deficit, target):
-        """
-        Scales down a squared deficit with respect to the square of the target
-        """
-        if target == 0:
-            return 0
-        else:
-            return sq_deficit / pow(target, 2)
+    # @staticmethod
+    # def squared_deficit_normalised(sq_deficit, target):
+    #     """
+    #     Scales down a squared deficit with respect to the square of the target
+    #     """
+    #     if target == 0:
+    #         return 0
+    #     else:
+    #         return sq_deficit / pow(target, 2)
 
     def set_GERD_filling_schedule(self, duration):
         target_storage = 50e9
