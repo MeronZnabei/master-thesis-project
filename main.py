@@ -7,7 +7,7 @@ from experimentation import baseline_optimization
 
 if __name__ == '__main__':
 
-    DEBUG = None
+    DEBUG = False
     if DEBUG:
         nfe = 1
         epsilon_list = [1, 1e-1, 1e-1, 1, 1e-1, 1]     # delete/add an epsilon when switched from None to a principle
