@@ -9,10 +9,10 @@ if __name__ == '__main__':
 
     DEBUG = False
     if DEBUG:
-        nfe = 1
-        epsilon_list = [1, 1e-1, 1e-1, 1, 1e-1, 1]     # delete/add an epsilon when switched from None to a principle
-        convergence_freq = 1
-        description = "None_biggest"
+        nfe = 10000
+        epsilon_list = [3.8, 0.8, 0.3, 1.9, 0.2, 4.2]     # delete/add an epsilon when switched from None to a principle
+        convergence_freq = 5000
+        description = "None_testd"
         principle = "None"           # possible principles uwf, swf, pwf, gini, None
     else:
         # Access the environment variables for input parameters
