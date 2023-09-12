@@ -40,22 +40,22 @@ month_list = [
 theme_colors = defaultdict(lambda x: "black")
 theme_colors.update(
     {
-        "darkblue": "#2d3da3",
-        "blue": "#0195fb",
-        "turquise": "#00bf8d",
-        "lightyellow": "#edfb95",
-        "beige": "#cbc98f",
-        "brown": "#765956",
-        "purple": "#6C0C86",
-        "red": "red",
-        "pink": "#c51b7d",
-        "plum": "orchid",
+ "darkblue": "#A0CBE8",
+        "blue": "#229A00",
+        "turquoise": "#00c99e",
+        "lightyellow": "#FFFF66",
+        "beige": "#F5F5DC",
+        "brown": "#85200C",
+        "purple": "#8A2BE2",
+        "red": "#F97306",
+        "pink": "#FF69B4",
+        "plum": "#DDA0DD",
         "gray": "#bdbdbd",
-        "green": "#41ab5d",
-        "yellow": "#fdaa09",
-        "maroon": "#800000",
-        "indianred": "indianred",
-        "chocolate": "chocolate",
+        "green": "#32CD32",
+        "yellow": "#FFD700",
+        "maroon": "#85200C",
+        "indianred": "#CD5C5C",
+        "chocolate": "#D2691E",
     }
 )
 
