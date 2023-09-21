@@ -104,17 +104,17 @@ class ModelNile:
         #     "atbara_dev_coef": kwargs["atbara_dev_coef"]
         # }
         (
-            egypt_irr,
-            egypt_90,
-            egypt_low_had,
-            sudan_irr,
-            sudan_90,
+            egypt_agg_def,
+            egypt_90p_def,
+            egypt_low_HAD,
+            sudan_agg_def,
+            sudan_90p_def,
             ethiopia_hydro,
-            principle_result
+            principle_result,
         ) = self.evaluate(
             np.array(input_parameters)
         )  # , uncertainty_parameters
-        return egypt_irr, egypt_90, egypt_low_had, sudan_irr, sudan_90, ethiopia_hydro, principle_result
+        return egypt_agg_def, egypt_90p_def, egypt_low_HAD, sudan_agg_def, sudan_90p_def, ethiopia_hydro, principle_result,
 
     def evaluate(self, parameter_vector):  # , uncertainty_dict
         """Evaluate the KPI values based on the given input
@@ -146,44 +146,65 @@ class ModelNile:
         ]
 
         egypt_agg_def = np.sum(bcm_def_egypt) / 20
-        egypt_90_perc_worst = np.percentile(
+
+        egypt_90p_def = np.percentile(
             bcm_def_egypt, 90, interpolation="closest_observation"
         )
-        egypt_freq_low_HAD = np.sum(self.reservoirs["HAD"].level_vector < 159) / len(
+        egypt_low_HAD = np.sum(self.reservoirs["HAD"].level_vector < 159) / len(
             self.reservoirs["HAD"].level_vector
         )
 
         sudan_irr_districts = [
             value for key, value in self.irr_districts.items() if key not in {"Egypt"}
         ]
-        sudan_agg_def_vector = np.repeat(0.0, self.simulation_horizon)
+        sudan_agg_def_vector = [0.0] * self.simulation_horizon
         for district in sudan_irr_districts:
-            sudan_agg_def_vector += district.deficit
-        bcm_def_sudan = [
-            month * 3600 * 24 * self.nu_of_days_per_month[i % 12] * 1e-9
-            for i, month in enumerate(sudan_agg_def_vector)
-        ]
+            sudan_agg_def_vector = [x + y for x, y in zip(sudan_agg_def_vector, district.deficit)]
+
+            
+        bcm_def_sudan = []
+
+        for i, month in enumerate(sudan_agg_def_vector):
+            value = month * 3600 * 24 * self.nu_of_days_per_month[i % 12] * 1e-9
+            bcm_def_sudan.append(value)
+
         sudan_agg_def = np.sum(bcm_def_sudan) / 20
-        sudan_90_perc_worst = np.percentile(
+        sudan_90p_def = np.percentile(
             bcm_def_sudan, 90, interpolation="closest_observation"
         )
 
-        ethiopia_agg_hydro = (
+        ethiopia_hydro = (
             np.sum(self.reservoirs["GERD"].actual_hydropower_production)
         ) / (20 * 1e6)
 
-        objectives = [egypt_agg_def, egypt_90_perc_worst, egypt_freq_low_HAD, sudan_agg_def, sudan_90_perc_worst, ethiopia_agg_hydro]
+        objectives = [egypt_agg_def, egypt_90p_def, egypt_low_HAD, sudan_agg_def, sudan_90p_def, ethiopia_hydro]
 
-        # values at timestep 0 used for normalization
-        y0_egypt_agg_def = sum(self.irr_districts["Egypt"].deficit[:12])/12 # the mean of the first year 
-        y0_egypt_90perc = y0_egypt_agg_def
-        y0_egypt_freq_lowHAD = 0.000001
-        y0_sudan_agg_def = sum(sudan_agg_def_vector[:12])/12
-        y0_sudan_90perc = y0_sudan_agg_def
-        y0_ethio_agg_hydro = sum(self.reservoirs["GERD"].actual_hydropower_production[:12])/12
+        ref_egypt_agg_def = np.sum(bcm_def_egypt[:12])
 
-        origins = [y0_egypt_agg_def, y0_egypt_90perc, y0_egypt_freq_lowHAD, y0_sudan_agg_def, y0_sudan_90perc, y0_ethio_agg_hydro]
-        objectives_norm = [((a - b) / b) if b != 0 else a for a, b in zip(objectives, origins)]# gemiddelde procentuele toename ten opzichte van t=0
+        ref_egypt_90p_def = np.percentile(
+            bcm_def_egypt[:12], 90, interpolation="closest_observation"
+            )
+        ref_egypt_low_HAD = np.sum(self.reservoirs["HAD"].level_vector[:12] < 159) / len(
+            self.reservoirs["HAD"].level_vector[:12]
+            )
+
+        if isinstance(np.sum(bcm_def_sudan[:12]), list):
+            print("bcm_def_sudan[:12] is a list:", bcm_def_sudan[:12])
+
+        ref_sudan_agg_def = np.sum(bcm_def_sudan[:12])
+
+        ref_sudan_90p_def = np.percentile(
+            bcm_def_sudan[:12], 90, interpolation="closest_observation"
+            )
+
+        ref_ethio_hydro = (
+            np.sum(self.reservoirs["GERD"].actual_hydropower_production[:12])
+            ) / 1e6  # Divide by 1e6 to convert from TWh to GWh
+
+
+        origins = [ref_egypt_agg_def, ref_egypt_90p_def, ref_egypt_low_HAD, ref_sudan_agg_def, ref_sudan_90p_def, ref_ethio_hydro]
+        
+        objectives_norm = [((a - b) / b) if b != 0 else a for a, b in zip(objectives, origins)]# average percentage increase relative to t=0
         
         if self.principle == "None":
             principle_result = None
@@ -196,18 +217,9 @@ class ModelNile:
         #     principle_result = sum(swfs)
         
         elif self.principle == "pwf":
-            gamma = 0.5  # Set the value of gamma as per your requirement
-            principle_result = 0
-
-            for obj in objectives_norm:
-                # Calculate the Prioritarian Welfare for the specific objective and add it to the score
-                if gamma != 1:
-                    if obj >= 0:
-                        principle_result += (obj ** gamma - 1) / (1 - gamma)
-                    else:
-                        principle_result += -(abs(obj) ** gamma - 1) / (1 - gamma)
-                else:
-                    principle_result += np.log(abs(obj))
+            total_pwf, gamma_values = self.evaluate_solution(objectives_norm)
+            print("Gamma Values:", gamma_values)
+            principle_result = total_pwf
         
         elif self.principle == "gini":
             n = len(objectives_norm)
@@ -221,12 +233,12 @@ class ModelNile:
 
         return (
             egypt_agg_def,
-            egypt_90_perc_worst,
-            egypt_freq_low_HAD,
+            egypt_90p_def,
+            egypt_low_HAD,
             sudan_agg_def,
-            sudan_90_perc_worst,
-            ethiopia_agg_hydro,
-            principle_result
+            sudan_90p_def,
+            ethiopia_hydro,
+            principle_result,
         )
 
     def simulate(self):
