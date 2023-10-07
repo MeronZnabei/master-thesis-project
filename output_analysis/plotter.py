@@ -112,7 +112,7 @@ def parallel_plots_many_policies(
         "Ethiopia Hydropower",
     ],
     units=["BCM/year", "BCM/month", "%", "BCM/year", "BCM/month", "TWh/year"],
-    directions=["min", "min", "min", "min", "min", "max"],
+    directions=["min", "min", "min", "min", "min", "max"]
 ):
 
     names = list(obj_df.columns)
@@ -144,7 +144,6 @@ def parallel_plots_many_policies(
     norm_df.sort_values(by="Name", inplace=True)
 
     fig = plt.figure()
-
     ax1 = fig.add_subplot(111)
 
     parallel_coordinates(
@@ -206,6 +205,136 @@ def parallel_plots_many_policies(
     )
 
     fig.set_size_inches(25, 12)
+
+    plt.show()
+
+def parallel_plots_many_principles(
+    objective_results,
+    solution_indices={},
+    solution_names={},
+    names_display=[
+        "Egypt Irr. Deficit",
+        "Egypt 90$^{th}$ Irr. Deficit",
+        "Egypt Low HAD",
+        "Sudan Irr. Deficit",
+        "Sudan 90$^{th}$ Irr. Deficit",
+        "Ethiopia Hydropower",
+    ],
+    units=["BCM/year", "BCM/month", "%", "BCM/year", "BCM/month", "TWh/year"],
+    directions=["min", "min", "min", "min", "min", "max"]
+):
+
+    fig, axes = plt.subplots(len(objective_results), 1, figsize=(30, 12 * len(objective_results)), sharex=True, sharey=True)
+
+    # Dictionary to store y-axis limits for each objective
+    objective_y_limits = {}
+
+    for p_idx, (key, obj_df) in enumerate(objective_results.items()):
+        ax = axes[p_idx]  # Get the current subplot
+
+        names = list(obj_df.columns)
+
+        objectives_df = obj_df.copy()
+        try:
+            # Perform the desired operation on the column
+            objectives_df["egypt_low_had"] = 100 * objectives_df["egypt_low_had"]
+        except KeyError:
+            # Column 'egypt_low_had' does not exist, so we skip the operation
+            pass
+
+        norm_df, desirability_couples = normalize_objs(obj_df, directions)
+
+        uds = []  # undesired
+        ds = []  # desired
+        for i in desirability_couples:
+            uds.append(str(round(i[0], 1)))
+            ds.append(str(round(i[1], 1)))
+
+        norm_df["Name"] = "All Solutions"
+        for i, solution_index in enumerate(solution_indices.get(key, [])):
+            norm_df.loc[solution_index, "Name"] = solution_names.get(key, [])[i]
+
+        norm_df.sort_values(by="Name", inplace=True)
+
+        ax1 = ax
+        for objective in names[1:]:
+            # Calculate y-axis limits for this objective if not already stored
+            if objective not in objective_y_limits:
+                y_min = norm_df[objective].min()
+                y_max = norm_df[objective].max()
+                objective_y_limits[objective] = (y_min, y_max)
+
+            # Set y-axis limits for this subplot's objective
+            y_min, y_max = objective_y_limits[objective]
+            ax1.set_ylim(y_min, y_max)
+
+        parallel_coordinates(
+            norm_df,
+            "Name",
+            color=[
+                theme_colors["gray"],
+                theme_colors["green"],
+                theme_colors["plum"],
+                theme_colors["purple"],
+                theme_colors["chocolate"],
+                theme_colors["yellow"],
+                theme_colors["blue"],
+                "red",
+            ],
+            linewidth=5,
+            alpha=0.8,
+        )
+
+        handles, labels = plt.gca().get_legend_handles_labels()
+        handles_dict = dict(zip(labels, handles))
+        labels = ["All Solutions"] + solution_names.get(key, [])
+
+        plt.legend(
+            flip([handles_dict[label] for label in labels], 4),
+            flip(labels, 4),
+            bbox_to_anchor=(0.0, -0.2, 1.0, 0.102),
+            loc="lower center",
+            ncol=4,
+            fontsize=22,
+        )
+
+        ax1.set_xticks(np.arange(len(names)))
+
+        ax1.set_xticklabels(
+            [
+                uds[i] + "\n" + "\n" + names_display[i] + "\n[" + units[i] + "]"
+                for i in range(len(names))
+            ],
+            fontsize=22,
+        )
+        ax2 = ax1.twiny()
+        ax2.set_xticks(np.arange(len(names)))
+        ax2.set_xticklabels([ds[i] for i in range(len(names))], fontsize=22)
+
+        ax1.get_yaxis().set_visible([])
+        ax1.set_title(key, fontsize=44)
+        if p_idx == len(objective_results) - 1:
+            # # Add the second x-axis to the last subplot
+            # ax2 = ax1.twiny()
+            # ax2.set_xticks(np.arange(len(names)))
+            # ax2.set_xticklabels([ds[i] for i in range(len(names))], fontsize=22)
+            plt.text(
+                1.02,
+                0.5,
+                "Direction of Preference $\\rightarrow$",
+                {"color": "#636363", "fontsize": 26},
+                horizontalalignment="left",
+                verticalalignment="center",
+                rotation=90,
+                clip_on=False,
+                transform=ax1.transAxes,
+            )
+            plt.legend().set_visible(False)
+
+    plt.subplots_adjust(bottom=0.2)
+    plt.tight_layout(pad=3.0)
+    plt.show()
+
 
 
 def parallel_plots_few_policies(
@@ -486,7 +615,7 @@ class HydroModelPlotter:
             label,
             x_title="Months",
             y_title="Release ($m^{3}$/s)",
-            ax=ax,
+            ax=ax
             color=color,
         )
 
