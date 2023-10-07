@@ -615,7 +615,7 @@ class HydroModelPlotter:
             label,
             x_title="Months",
             y_title="Release ($m^{3}$/s)",
-            ax=ax
+            ax=ax,
             color=color,
         )
 
