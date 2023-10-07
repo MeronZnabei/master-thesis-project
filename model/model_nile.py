@@ -110,7 +110,7 @@ class ModelNile:
             sudan_agg_def,
             sudan_90p_def,
             ethiopia_hydro,
-            principle_result,
+            principle_result
         ) = self.evaluate(
             np.array(input_parameters)
         )  # , uncertainty_parameters
@@ -144,7 +144,7 @@ class ModelNile:
             month * 3600 * 24 * self.nu_of_days_per_month[i % 12] * 1e-9
             for i, month in enumerate(self.irr_districts["Egypt"].deficit) # i = 12*20, month = deficit in that month
         ]
-
+        
         egypt_agg_def = np.sum(bcm_def_egypt) / 20
 
         egypt_90p_def = np.percentile(
@@ -187,10 +187,6 @@ class ModelNile:
         ref_egypt_low_HAD = np.sum(self.reservoirs["HAD"].level_vector[:12] < 159) / len(
             self.reservoirs["HAD"].level_vector[:12]
             )
-
-        if isinstance(np.sum(bcm_def_sudan[:12]), list):
-            print("bcm_def_sudan[:12] is a list:", bcm_def_sudan[:12])
-
         ref_sudan_agg_def = np.sum(bcm_def_sudan[:12])
 
         ref_sudan_90p_def = np.percentile(
@@ -203,8 +199,8 @@ class ModelNile:
 
 
         origins = [ref_egypt_agg_def, ref_egypt_90p_def, ref_egypt_low_HAD, ref_sudan_agg_def, ref_sudan_90p_def, ref_ethio_hydro]
-        
-        objectives_norm = [((a - b) / b) if b != 0 else a for a, b in zip(objectives, origins)]# average percentage increase relative to t=0
+        print("origins:", origins)
+        objectives_norm = [((a - b) / b) if b != 0 else a for a, b in zip(objectives, origins)]# average percentage increase relative to the first year
         
         if self.principle == "None":
             principle_result = None
@@ -217,9 +213,24 @@ class ModelNile:
         #     principle_result = sum(swfs)
         
         elif self.principle == "pwf":
-            total_pwf, gamma_values = self.evaluate_solution(objectives_norm)
-            print("Gamma Values:", gamma_values)
-            principle_result = total_pwf
+            # Compute signed pairwise differences prioritizing lower origins
+            pairwise_differences = np.zeros((len(origins), len(origins)))
+            for i in range(len(origins)):
+                for j in range(len(origins)):
+                    pairwise_differences[i, j] = origins[j] - origins[i]  # Inversion for prioritization
+
+            # Compute gamma values for each origin
+            gamma_raw = np.sum(pairwise_differences, axis=1) - np.diagonal(pairwise_differences)
+            gamma_raw /= (len(origins) - 1)
+            gamma_per_objective = (gamma_raw - np.min(gamma_raw)) / (np.max(gamma_raw) - np.min(gamma_raw))
+            gamma_per_objective /= np.sum(gamma_per_objective)
+            print("gamma per objective:", gamma_per_objective)
+
+            # Calculate PWF values for each objective based on gamma and store them in pwf_results
+            pwf_results = [(obj ** (1 - gamma)) / (1 - gamma) if gamma != 1 else np.log(abs(obj)) for obj, gamma in zip(objectives, gamma_per_objective)]
+
+            # Calculate the total PWF
+            principle_result = sum(pwf_results)
         
         elif self.principle == "gini":
             n = len(objectives_norm)
@@ -238,7 +249,7 @@ class ModelNile:
             sudan_agg_def,
             sudan_90p_def,
             ethiopia_hydro,
-            principle_result,
+            principle_result
         )
 
     def simulate(self):
