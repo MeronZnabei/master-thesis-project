@@ -219,7 +219,6 @@ def custom_parallel_coordinates(
                               color_by_categorical, color_dict_categorical)
         elif color_by_categorical is not None:
             color_palette = list(theme_colors.values())[:len(color_categories)]
-
             ### Zip created_vars_names and color_palette, then convert it to a dictionary
             color_dict_categorical = dict(zip(color_categories, color_palette))
             ### Add 'general': 'gray' as the first key-value pair
@@ -243,7 +242,7 @@ def custom_parallel_coordinates(
                 lw = lw_base
             else:
                 alpha = alpha_brush
-                lw = 7
+                lw = lw_base
                 zorder = 2
         else:
             alpha = alpha_base
@@ -262,7 +261,7 @@ def custom_parallel_coordinates(
                     zorder=5, fontsize=fontsize)
         ax.annotate(f"{bottoms[j]:.1f}", [j, -0.02], ha='center', va='top', 
                     zorder=5, fontsize=fontsize)  
-        ax.plot([j,j], [0,1], c='k', zorder=1)
+        ax.plot([j,j], [0,1], c='lightgray', zorder=1)
      
     ### other aesthetics
     ax.set_xticks([])
@@ -276,7 +275,7 @@ def custom_parallel_coordinates(
 
     ax.annotate(
         arrow_text,
-        xy=(len(columns_axes) -0.6, 0.5),
+        xy=(len(columns_axes) -0.8, 0.5),
         color="#636363",
         fontsize=fontsize,
         rotation=90,
@@ -286,7 +285,7 @@ def custom_parallel_coordinates(
 
  
     ### !! push adjustment !!
-    ax.set_xlim(-0.4, len(columns_axes) - 0.2)
+    ax.set_xlim(-0.4, len(columns_axes))
     ax.set_ylim(-0.4,1.1)
      
     for i, (label, unit) in enumerate(zip(axis_labels, units)):
