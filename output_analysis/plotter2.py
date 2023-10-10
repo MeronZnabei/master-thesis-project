@@ -312,8 +312,8 @@ def custom_parallel_coordinates(
         for label,color in color_dict_categorical.items():
             leg.append(Line2D([0], [0], color=color, lw=7, 
                               alpha=alpha_base, label=label))
-        _ = ax.legend(handles=leg, loc='upper center', 
-                      ncol=4,
+        _ = ax.legend(handles=leg, loc='lower center', 
+                      ncol=max(3, len(color_dict_categorical)),
                       bbox_to_anchor=[0.5,-0.07], frameon=False, fontsize=22)
          
     ### save figure
