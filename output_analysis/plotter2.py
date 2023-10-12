@@ -82,6 +82,7 @@ def get_zorder(norm_value, zorder_num_classes, zorder_direction):
 
 ### customizable parallel coordinates plot
 def custom_parallel_coordinates(
+        ax,
         obj_df,
         columns_axes=None,
         axis_labels=None,
@@ -101,7 +102,7 @@ def custom_parallel_coordinates(
         alpha_brush=0.15,
         lw_base=7,
         fontsize=22, 
-        figsize=(37.5, 12),
+        title=None,
         save_fig_filename=None,
 ):
     """
@@ -154,7 +155,7 @@ def custom_parallel_coordinates(
 
     ### create figure
     ### 'hspace, wspace: the height and width spacing between subplots in percentage of the height/width of each subplot
-    fig,ax = plt.subplots(1,1, figsize=figsize, gridspec_kw={'hspace':0.1, 'wspace':0.1})
+    # fig,ax = plt.subplots(1,1, figsize=figsize, gridspec_kw={'hspace':0.1, 'wspace':0.1})
 
     # Verify that every column in columns_axes has a corresponding direction in directions_dict
     for column in columns_axes:
@@ -312,9 +313,12 @@ def custom_parallel_coordinates(
             leg.append(Line2D([0], [0], color=color, lw=7, 
                               alpha=alpha_base, label=label))
         _ = ax.legend(handles=leg, loc='lower center', 
-                      ncol=max(3, len(color_dict_categorical)),
-                      bbox_to_anchor=[0.5,-0.07], frameon=False, fontsize=22)
-         
+                      ncol=min(5, len(color_dict_categorical)),
+                      bbox_to_anchor=[0.46,-0.07], frameon=False, fontsize=22)
+    
+    ### add a title to the figure
+    if title: 
+        ax.set_title(title, fontsize=26, pad=20)     
     ### save figure
     if save_fig_filename is not None:
         plt.savefig(save_fig_filename, bbox_inches='tight', dpi=300)
