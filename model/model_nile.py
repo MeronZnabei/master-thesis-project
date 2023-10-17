@@ -465,10 +465,10 @@ class ModelNile:
     @staticmethod
     def deficit_from_target(realisation, target):
         """
-        Calculates the deficit given the realisation of an
+        Calculates the deficit as a percentage of the demand given the realisation of an
         objective and the target
         """
-        return max(0, target - realisation)
+        return max(0, (target - realisation) / target)
 
     # @staticmethod
     # def squared_deficit_from_target(realisation, target):
