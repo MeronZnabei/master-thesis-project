@@ -117,12 +117,12 @@ def run(nfe:int, epsilon_list:list, convergence_freq:int, description:str, princ
 
     # specify outcomes
     em_model.outcomes = [
-        ScalarOutcome("egypt_irr", ScalarOutcome.MINIMIZE),
-        ScalarOutcome("egypt_90", ScalarOutcome.MINIMIZE),
-        ScalarOutcome("egypt_low_had", ScalarOutcome.MINIMIZE),
-        ScalarOutcome("sudan_irr", ScalarOutcome.MINIMIZE),
-        ScalarOutcome("sudan_90", ScalarOutcome.MINIMIZE),
-        ScalarOutcome("ethiopia_hydro", ScalarOutcome.MAXIMIZE),
+        ScalarOutcome("egypt_agg_deficit_ratio", ScalarOutcome.MINIMIZE),
+        ScalarOutcome("egypt_90p_deficit_ratio", ScalarOutcome.MINIMIZE),
+        ScalarOutcome("egypt_low_had_frequency", ScalarOutcome.MINIMIZE),
+        ScalarOutcome("sudan_agg_deficit_ratio", ScalarOutcome.MINIMIZE),
+        ScalarOutcome("sudan_90p_deficit_ratio", ScalarOutcome.MINIMIZE),
+        ScalarOutcome("ethiopia_agg_deficit_ratio", ScalarOutcome.MINIMIZE),
     ]
     if principle != "None":
         em_model.outcomes.extend(   # extend function used instead of append, since em_model.outcomes refers to an instance of the NamedObjectMap class

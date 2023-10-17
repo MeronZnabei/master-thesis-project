@@ -104,17 +104,17 @@ class ModelNile:
         #     "atbara_dev_coef": kwargs["atbara_dev_coef"]
         # }
         (
-            egypt_agg_def,
-            egypt_90p_def,
-            egypt_low_HAD,
-            sudan_agg_def,
-            sudan_90p_def,
-            ethiopia_hydro,
+            egypt_agg_deficit_ratio,
+            egypt_90p_deficit_ratio,
+            egypt_low_had_frequency,
+            sudan_agg_deficit_ratio,
+            sudan_90p_deficit_ratio,
+            ethiopia_agg_deficit_ratio,
             principle_result
         ) = self.evaluate(
             np.array(input_parameters)
         )  # , uncertainty_parameters
-        return egypt_agg_def, egypt_90p_def, egypt_low_HAD, sudan_agg_def, sudan_90p_def, ethiopia_hydro, principle_result,
+        return egypt_agg_deficit_ratio, egypt_90p_deficit_ratio, egypt_low_had_frequency, sudan_agg_deficit_ratio, sudan_90p_deficit_ratio, ethiopia_agg_deficit_ratio, principle_result,
 
     def evaluate(self, parameter_vector):  # , uncertainty_dict
         """Evaluate the KPI values based on the given input
@@ -140,72 +140,55 @@ class ModelNile:
         self.overarching_policy.assign_free_parameters(parameter_vector)
         self.simulate()
 
-        bcm_def_egypt = [
-            month * 3600 * 24 * self.nu_of_days_per_month[i % 12] * 1e-9
-            for i, month in enumerate(self.irr_districts["Egypt"].deficit) # i = 12*20, month = deficit in that month
-        ]
         
-        egypt_agg_def = np.sum(bcm_def_egypt) / 20
+        # Calculate Egypt's aggregated deficit-to-target ratio over 20 years
+        egypt_agg_deficit_ratio = np.divide(np.sum(self.irr_districts["Egypt"].deficit), np.sum(self.irr_districts["Egypt"].target))
 
-        egypt_90p_def = np.percentile(
-            bcm_def_egypt, 90, interpolation="closest_observation"
-        )
-        egypt_low_HAD = np.sum(self.reservoirs["HAD"].level_vector < 159) / len(
-            self.reservoirs["HAD"].level_vector
+        # Calculate Egypt's monthly deficit-to-target ratio
+        egypt_monthly_deficit_ratio = np.divide(self.irr_districts["Egypt"].deficit, self.irr_districts["Egypt"].target)
+
+        # Calculate Egypt's 90th percentile worst month deficit ratio
+        egypt_90p_deficit_ratio = np.percentile(
+            egypt_monthly_deficit_ratio , 90, interpolation="closest_observation"
         )
 
+        # Calculate the frequency of low reservoir levels in HAD reservoir
+        egypt_low_had_frequency = np.divide(np.sum(self.reservoirs["HAD"].level_vector < 159), len(self.reservoirs["HAD"].level_vector))
+
+        # create a list of the Sudanese districts
         sudan_irr_districts = [
             value for key, value in self.irr_districts.items() if key not in {"Egypt"}
         ]
-        sudan_agg_def_vector = [0.0] * self.simulation_horizon
-        for district in sudan_irr_districts:
-            sudan_agg_def_vector = [x + y for x, y in zip(sudan_agg_def_vector, district.deficit)]
 
-            
-        bcm_def_sudan = []
+        # Extract deficits for Sudanese districts
+        sudan_deficits = [district.deficit for district in sudan_irr_districts]
+        sudan_targets = [district.target for district in sudan_irr_districts]
 
-        for i, month in enumerate(sudan_agg_def_vector):
-            value = month * 3600 * 24 * self.nu_of_days_per_month[i % 12] * 1e-9
-            bcm_def_sudan.append(value)
+        # Extract deficits and targets for Sudanese districts
+        sudan_agg_def_vector = np.sum(np.stack(sudan_deficits, axis=0), axis=0)
+        sudan_agg_target_vector = np.sum(np.stack(sudan_targets, axis=0), axis=0)
 
-        sudan_agg_def = np.sum(bcm_def_sudan) / 20
-        sudan_90p_def = np.percentile(
-            bcm_def_sudan, 90, interpolation="closest_observation"
+        # Calculate Sudan's aggregated deficit-to-target ratio over 20 years
+        sudan_agg_deficit_ratio = np.divide(np.sum(sudan_agg_def_vector), np.sum(sudan_agg_target_vector))
+
+        # Calculate Sudan's monthly deficit-to-target ratio
+        sudan_monthly_deficit_ratio = np.divide(sudan_agg_def_vector, sudan_agg_target_vector)
+        
+        # Calculate Sudan's 90th percentile worst month deficit ratio
+        sudan_90p_deficit_ratio = np.percentile(
+            sudan_monthly_deficit_ratio, 90, interpolation="closest_observation"
         )
 
-        ethiopia_hydro = (
-            np.sum(self.reservoirs["GERD"].actual_hydropower_production)
-        ) / (20 * 1e6)
+        # ratio of the total deficit over 20 years compared to total demand
+        ethiopia_agg_deficit_ratio = np.divide(np.sum(self.reservoirs["GERD"].deficit), np.sum(self.reservoirs["GERD"].target))
 
-        objectives = [egypt_agg_def, egypt_90p_def, egypt_low_HAD, sudan_agg_def, sudan_90p_def, ethiopia_hydro]
-
-        ref_egypt_agg_def = np.sum(bcm_def_egypt[:12])
-
-        ref_egypt_90p_def = np.percentile(
-            bcm_def_egypt[:12], 90, interpolation="closest_observation"
-            )
-        ref_egypt_low_HAD = np.sum(self.reservoirs["HAD"].level_vector[:12] < 159) / len(
-            self.reservoirs["HAD"].level_vector[:12]
-            )
-        ref_sudan_agg_def = np.sum(bcm_def_sudan[:12])
-
-        ref_sudan_90p_def = np.percentile(
-            bcm_def_sudan[:12], 90, interpolation="closest_observation"
-            )
-
-        ref_ethio_hydro = (
-            np.sum(self.reservoirs["GERD"].actual_hydropower_production[:12])
-            ) / 1e6  # Divide by 1e6 to convert from TWh to GWh
-
-
-        origins = [ref_egypt_agg_def, ref_egypt_90p_def, ref_egypt_low_HAD, ref_sudan_agg_def, ref_sudan_90p_def, ref_ethio_hydro]
-        print("origins:", origins)
-        objectives_norm = [((a - b) / b) if b != 0 else a for a, b in zip(objectives, origins)]# average percentage increase relative to the first year
+        objectives = [egypt_agg_deficit_ratio, egypt_90p_deficit_ratio, egypt_low_had_frequency, sudan_agg_deficit_ratio, sudan_90p_deficit_ratio, ethiopia_agg_deficit_ratio]
         
         if self.principle == "None":
             principle_result = None
         elif self.principle == "uwf":
-            principle_result = sum(objectives_norm)
+            modified_objectives = [1 - obj for obj in objectives]
+            principle_result = sum(modified_objectives)
         
         # elif self.principle == "swf":
         #     threshold_values = [0.5, 100, 0.1, 500, 200, 100]
@@ -213,28 +196,36 @@ class ModelNile:
         #     principle_result = sum(swfs)
         
         elif self.principle == "pwf":
-            # Compute signed pairwise differences prioritizing lower origins
-            pairwise_differences = np.zeros((len(origins), len(origins)))
-            for i in range(len(origins)):
-                for j in range(len(origins)):
-                    pairwise_differences[i, j] = origins[j] - origins[i]  # Inversion for prioritization
+            # # Compute signed pairwise differences prioritizing lower origins
+            # pairwise_differences = np.zeros((len(origins), len(origins)))
+            # for i in range(len(origins)):
+            #     for j in range(len(origins)):
+            #         pairwise_differences[i, j] = origins[j] - origins[i]  # Inversion for prioritization
 
-            # Compute gamma values for each origin
-            gamma_raw = np.sum(pairwise_differences, axis=1) - np.diagonal(pairwise_differences)
-            gamma_raw /= (len(origins) - 1)
-            gamma_per_objective = (gamma_raw - np.min(gamma_raw)) / (np.max(gamma_raw) - np.min(gamma_raw))
-            gamma_per_objective /= np.sum(gamma_per_objective)
-            print("gamma per objective:", gamma_per_objective)
-
+            # # Compute gamma values for each origin
+            # gamma_raw = np.sum(pairwise_differences, axis=1) - np.diagonal(pairwise_differences)
+            # gamma_raw /= (len(origins) - 1)
+            # gamma_per_objective = (gamma_raw - np.min(gamma_raw)) / (np.max(gamma_raw) - np.min(gamma_raw))
+            # gamma_per_objective /= np.sum(gamma_per_objective)
+            # print("gamma per objective:", gamma_per_objective)
+            gamma = 3
+            pwf_results = []
             # Calculate PWF values for each objective based on gamma and store them in pwf_results
-            pwf_results = [(obj ** (1 - gamma)) / (1 - gamma) if gamma != 1 else np.log(abs(obj)) for obj, gamma in zip(objectives, gamma_per_objective)]
+            for obj in objectives:
+                if obj == 0:
+                    pwf_obj = 0
+                elif obj > 0:
+                    pwf_obj = ((1-obj) ** (1 - gamma)) / (1 - gamma)
+                elif obj < 0:
+                    pwf_obj = ((1 + abs(obj)) ** (1 - gamma)) / (1 - gamma)
+                pwf_results.append(pwf_obj)
 
             # Calculate the total PWF
             principle_result = sum(pwf_results)
         
         elif self.principle == "gini":
-            n = len(objectives_norm)
-            sorted_objectives = np.sort(objectives_norm)
+            n = len(objectives)
+            sorted_objectives = np.sort(objectives)
             diffs = np.abs(np.subtract.outer(sorted_objectives, sorted_objectives)).flatten()
             # 1 - ... needed so that all principles have a maximization direction
             principle_result = 1 - (np.sum(diffs) / (2.0 * n * np.sum(sorted_objectives)))
@@ -243,12 +234,12 @@ class ModelNile:
             raise ValueError("Invalid principle. Please choose a valid principle.")
 
         return (
-            egypt_agg_def,
-            egypt_90p_def,
-            egypt_low_HAD,
-            sudan_agg_def,
-            sudan_90p_def,
-            ethiopia_hydro,
+            egypt_agg_deficit_ratio,
+            egypt_90p_deficit_ratio,
+            egypt_low_had_frequency,
+            sudan_agg_deficit_ratio,
+            sudan_90p_deficit_ratio,
+            ethiopia_agg_deficit_ratio,
             principle_result
         )
 
@@ -442,21 +433,37 @@ class ModelNile:
                         district.received_flow[-1], district.demand[t]
                     ),
                 )
+                district.target = np.append(
+                    district.target, district.demand[t]
+                )
 
             # Hydropower objectives
 
             for reservoir in self.reservoirs.values():
                 hydropower_production = 0
+                hydropower_target_production = 0
                 for plant in reservoir.hydropower_plants:
-                    production = plant.calculate_hydropower_production(
+                    production, target_production = plant.calculate_hydropower_production(
                         reservoir.release_vector[-1],
                         reservoir.level_vector[-1],
                         nu_of_days,
                     )
                     hydropower_production += production
+                    hydropower_target_production += target_production
 
                 reservoir.actual_hydropower_production = np.append(
                     reservoir.actual_hydropower_production, hydropower_production
+                )
+
+                reservoir.deficit = np.append(
+                    reservoir.deficit,
+                    self.deficit_from_target(
+                        hydropower_production, hydropower_target_production
+                    ),
+                )
+
+                reservoir.target = np.append(
+                    reservoir.target, hydropower_target_production
                 )
 
             if t == (self.GERD_filling_time * 12):
@@ -468,7 +475,7 @@ class ModelNile:
         Calculates the deficit as a percentage of the demand given the realisation of an
         objective and the target
         """
-        return max(0, (target - realisation) / target)
+        return max(0, (target - realisation))
 
     # @staticmethod
     # def squared_deficit_from_target(realisation, target):

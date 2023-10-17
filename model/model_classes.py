@@ -48,7 +48,9 @@ class HydropowerPlant:
 
         hydropower_production = power_in_MW * nu_of_days * hours_in_a_day  # MWh
 
-        return hydropower_production
+        target_production = self.max_capacity * nu_of_days * hours_in_a_day  # MWh
+
+        return hydropower_production, target_production
 
 
 class IrrigationDistrict:
@@ -79,6 +81,7 @@ class IrrigationDistrict:
         self.deficit = np.empty(0)
         self.squared_deficit = np.empty(0)
         self.normalised_deficit = np.empty(0)
+        self.target = np.empty(0)
 
 
 class Reservoir:
@@ -172,6 +175,8 @@ class Reservoir:
         self.hydropower_deficit = np.empty(0)
         self.filling_schedule = None
         self.total_evap = np.empty(0)
+        self.deficit = np.empty(0)
+        self.target = np.empty(0)
         # Basic memorization implementation
         # self.level_to_surface_memo = dict()
         # self.storage_to_level_memo = dict()
