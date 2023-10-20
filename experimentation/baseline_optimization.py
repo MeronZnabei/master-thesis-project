@@ -130,7 +130,6 @@ def run(nfe:int, epsilon_list:list, convergence_freq:int, description:str, princ
 
     # random.seed(123)
     results = []
-    convergences = []
     before = datetime.now()
 
     with MultiprocessingEvaluator(em_model) as evaluator:
@@ -151,6 +150,8 @@ def run(nfe:int, epsilon_list:list, convergence_freq:int, description:str, princ
         ),
     ],
             )
+            result_filename = f"{output_directory}baseline_results_nfe{nfe}_{description}_s{i}.csv"
+            result.to_csv(result_filename)
             results.append(result)
             convergence_filename = f"{output_directory}baseline_convergence_nfe{nfe}_{description}_s{i}.csv"
             convergence.to_csv(convergence_filename)
