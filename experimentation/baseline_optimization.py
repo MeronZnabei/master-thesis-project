@@ -1,14 +1,13 @@
 """
 Script for baseline optimization
 """
-import random
 import os
 # import tarfile
 # import shutil
 from datetime import datetime
 
 from ema_workbench import ema_logging, Model, RealParameter, ScalarOutcome, MultiprocessingEvaluator
-from ema_workbench.em_framework.optimization import EpsilonProgress, ArchiveLogger
+from ema_workbench.em_framework.optimization import EpsilonProgress, ArchiveLogger, epsilon_nondominated, to_problem
 from experimentation.data_generation import generate_input_data
 from model.model_nile import ModelNile
 
@@ -129,43 +128,45 @@ def run(nfe:int, epsilon_list:list, convergence_freq:int, description:str, princ
         ScalarOutcome("principle_result", ScalarOutcome.MAXIMIZE)
         )
 
-    convergence_metrics = [
-        EpsilonProgress(),
-        ArchiveLogger(
-            archive_directory,
-            [lever.name for lever in em_model.levers],
-            [outcome.name for outcome in em_model.outcomes],
-        ),
-    ]
-
-    random.seed(123)
+    # random.seed(123)
+    results = []
+    convergences = []
     before = datetime.now()
 
     with MultiprocessingEvaluator(em_model) as evaluator:
-        results, convergence = evaluator.optimize(
-            nfe=nfe,
-            searchover="levers",
-            epsilons=epsilon_list,
-            convergence_freq=convergence_freq,
-            # real convergence_freq=500,
-            convergence=convergence_metrics,
-        )
-
+        for i in range(5):
+            result, convergence = evaluator.optimize(
+                nfe=nfe,
+                searchover="levers",
+                epsilons=epsilon_list,
+                convergence_freq=convergence_freq,
+                # real convergence_freq=500,
+                convergence=[
+                    EpsilonProgress(),
+                    ArchiveLogger(
+                        archive_directory,
+                        [lever.name for lever in em_model.levers],
+                        [outcome.name for outcome in em_model.outcomes],
+                        base_filename=f"{i}.tar.gz"
+        ),
+    ],
+            )
+            results.append(result)
+            convergence_filename = f"{output_directory}baseline_convergence_nfe{nfe}_{description}_s{i}.csv"
+            convergence.to_csv(convergence_filename)
     after = datetime.now()
 
 
     with open(f"{output_directory}time_counter_{description}.txt", "w") as f:
         f.write(
             f'''experiment {description} took {after-before} time to do {nfe} NFEs with 
-            a convergence frequency of {convergence_freq} and epsilons: {epsilon_list}, for principle {principle}.'''
-        )
+            a convergence frequency of {convergence_freq} and epsilons: {epsilon_list}, for principle {principle} and 5 seeds.'''
+            )
+    
+    problem = to_problem(em_model, searchover="levers")
+    epsilons = epsilon_list
 
-    # # unpack logs
-    # extract_and_save_csv_from_tar_gz(archive_directory)
-
+    merged_results = epsilon_nondominated(results, epsilons, problem)
     # Use description in the filename for the CSV files
     results_filename = f"{output_directory}baseline_results_nfe{nfe}_{description}.csv"
-    convergence_filename = f"{output_directory}baseline_convergence_nfe{nfe}_{description}.csv"
-
-    results.to_csv(results_filename)
-    convergence.to_csv(convergence_filename)
+    merged_results.to_csv(results_filename)
