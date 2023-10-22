@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 from matplotlib import colormaps, cm
 from matplotlib.collections import PatchCollection
 from matplotlib.lines import Line2D
@@ -31,10 +32,9 @@ def reorganize_objs(obj_df, columns_axes, ideal_direction, minmaxs):
     ### if min/max directions not given for each axis, assume all should be maximized
     if minmaxs is None:
         minmaxs = ['max']*len(columns_axes)
-         
-    ### get subset of dataframe columns that will be shown as parallel axes
+
     objs_reorg = obj_df[columns_axes].copy()
-     
+
     ### reorganize & normalize data to go from 0 (bottom of figure) to 1 (top of figure), 
     ### based on direction of preference for figure and individual axes
     if ideal_direction == 'bottom':
@@ -84,6 +84,7 @@ def get_zorder(norm_value, zorder_num_classes, zorder_direction):
 def custom_parallel_coordinates(
         ax,
         obj_df,
+        minmax_df=None,
         columns_axes=None,
         axis_labels=None,
         units=None,
@@ -163,6 +164,10 @@ def custom_parallel_coordinates(
             raise ValueError(f"Direction not specified for column: {column}")
     # Extract a list of directions for specified columns in columns_axes
     minmaxs = [directions[column] for column in columns_axes]
+
+    if minmax_df is not None:
+        ### if we want a shared axes across subplots we need to add the shared min/max values to the objectives dataframe
+        obj_df = pd.concat([obj_df, minmax_df], ignore_index=True) 
     ### reorganize & normalize objective data
     objs_reorg, tops, bottoms = reorganize_objs(obj_df, columns_axes, ideal_direction, minmaxs)
 
@@ -173,8 +178,8 @@ def custom_parallel_coordinates(
     
         for col_idx, (threshold, operator) in brushing_dict.items():
             if operator == '!=':
-                # Brush rows where the categorical column matches the specified category
-                satisfice = np.logical_and(satisfice, obj_df.loc[:,col_idx] != threshold)
+                # Brush rows where the categorical column matches any of the specified categories
+                satisfice = np.logical_and(satisfice, ~obj_df.loc[:, col_idx].isin(threshold))
             if operator == '<':
                 satisfice = np.logical_and(satisfice, obj_df.loc[:,col_idx] < threshold)
             elif operator == '<=':
@@ -224,11 +229,11 @@ def custom_parallel_coordinates(
             color_dict_categorical = dict(zip(color_categories, color_palette))
             ### Add 'general': 'gray' as the first key-value pair
             color_dict_categorical.update({'other': 'gray'})
+            color_dict_categorical.update({'minmax': 'black'})
             
             color = get_color(obj_df.loc[i,color_by_categorical], 
                               color_by_continuous, color_palette_continuous,
-                              color_by_categorical, color_dict_categorical)
-                         
+                              color_by_categorical, color_dict_categorical)               
         ### order lines according to ascending or descending values of one of the objectives?
         if zorder_by is None:
             zorder = 4
@@ -241,21 +246,22 @@ def custom_parallel_coordinates(
             if satisfice.loc[i]:
                 alpha = alpha_base
                 lw = lw_base
+            elif obj_df.loc[i,color_by_categorical] == 'minmax':
+                alpha = 0
+                lw = 0
             else:
                 alpha = alpha_brush
                 lw = lw_base
                 zorder = 2
         else:
             alpha = alpha_base
-            lw = lw_base
-             
+            lw = lw_base    
         ### loop over objective/column pairs & plot lines between parallel axes
         for j in range(objs_reorg.shape[1]-1):
             y = [objs_reorg.iloc[i, j], objs_reorg.iloc[i, j+1]]
             x = [j, j+1]
             ax.plot(x, y, c=color, alpha=alpha, zorder=zorder, lw=lw)
-             
-             
+     
     ### add top/bottom ranges with one decimal point precision
     for j in range(len(columns_axes)):
         ax.annotate(f"{tops[j]:.1f}", [j, 1.02], ha='center', va='bottom', 
@@ -310,8 +316,9 @@ def custom_parallel_coordinates(
     elif color_by_categorical is not None:
         leg = []
         for label,color in color_dict_categorical.items():
-            leg.append(Line2D([0], [0], color=color, lw=7, 
-                              alpha=alpha_base, label=label))
+            if label != 'minmax':
+                leg.append(Line2D([0], [0], color=color, lw=7, 
+                                alpha=alpha_base, label=label))
         _ = ax.legend(handles=leg, loc='lower center', 
                       ncol=min(5, len(color_dict_categorical)),
                       bbox_to_anchor=[0.46,-0.07], frameon=False, fontsize=22)
