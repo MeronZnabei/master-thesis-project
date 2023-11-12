@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from itertools import islice
 from matplotlib import colormaps, cm
 from matplotlib.collections import PatchCollection
 from matplotlib.lines import Line2D
@@ -10,19 +11,20 @@ from collections import defaultdict
 theme_colors = defaultdict(lambda x: "black")
 theme_colors.update(
     {
-        "green": "#32CD32",
-        "plum": "#DDA0DD",
-        "purple": "#8A2BE2",
-        "chocolate": "#D2691E",
-        "yellow": "#FFD700",
-        "blue": "#229A00",
-        "red": "#F97306",
-        "brown": "#85200C",
-        "turquoise": "#00c99e",
+        "Best Egypt Irr": "#104b6d",
+        "Best Egypt 90$^{th}$": "#648ea3",
+        "Best Egypt HAD": "#08a9e5", 
+        "Best Sudan Irr": "#ff0014",
+        "Best Sudan 90$^{th}$": "#b20000",
+        "Best Ethiopia Hydro": "#ffd700",
+        "Best Utilitarian": "#f97306",
+        "Best Prioritarian": "#DDA0DD",
+        "Best Egalitarian": "#32CD32",
+        "other": "gray",
+        "minmax": "black",
         "maroon": "#85200C",
         "pink": "#FF69B4",
         "indianred": "#CD5C5C",
-        "darkblue": "#A0CBE8",
         "beige": "#F5F5DC",
     }
 )
@@ -100,8 +102,8 @@ def custom_parallel_coordinates(
         zorder_direction='ascending',
         alpha_base=1, 
         brushing_dict=None, 
-        alpha_brush=0.15,
-        lw_base=7,
+        alpha_brush=0.05,
+        lw_base=5,
         fontsize=22, 
         title=None,
         save_fig_filename=None,
@@ -224,16 +226,11 @@ def custom_parallel_coordinates(
                               color_by_continuous, color_palette_continuous,
                               color_by_categorical, color_dict_categorical)
         elif color_by_categorical is not None:
-            color_palette = list(theme_colors.values())[:len(color_categories)]
-            ### Zip created_vars_names and color_palette, then convert it to a dictionary
-            color_dict_categorical = dict(zip(color_categories, color_palette))
-            ### Add 'general': 'gray' as the first key-value pair
-            color_dict_categorical.update({'other': 'gray'})
-            color_dict_categorical.update({'minmax': 'black'})
             
             color = get_color(obj_df.loc[i,color_by_categorical], 
                               color_by_continuous, color_palette_continuous,
-                              color_by_categorical, color_dict_categorical)               
+                              color_by_categorical, theme_colors)
+        
         ### order lines according to ascending or descending values of one of the objectives?
         if zorder_by is None:
             zorder = 4
@@ -294,12 +291,16 @@ def custom_parallel_coordinates(
     ### !! push adjustment !!
     ax.set_xlim(-0.4, len(columns_axes))
     ax.set_ylim(-0.4,1.1)
+
+    if units != None:
+        for i, (label, unit) in enumerate(zip(axis_labels, units)):
+            ax.annotate(f"{label}\n[{unit}]", xy=(i, -0.12), ha='center', va='top', fontsize=fontsize)
+        ax.patch.set_alpha(0)
+    else:
+        for i, label in enumerate(axis_labels):
+            ax.annotate(f"{label}", xy=(i, -0.12), ha='center', va='top', fontsize=fontsize)
+        ax.patch.set_alpha(0)
      
-    for i, (label, unit) in enumerate(zip(axis_labels, units)):
-        ax.annotate(f"{label}\n[{unit}]", xy=(i, -0.12), ha='center', va='top', fontsize=fontsize)
-    ax.patch.set_alpha(0)
-     
- 
     ### colorbar for continuous legend
     if color_by_continuous is not None:
         mappable = cm.ScalarMappable(cmap=color_palette_continuous)
@@ -313,14 +314,18 @@ def custom_parallel_coordinates(
                                  fontsize=fontsize)
         _ = cb.ax.set_xlabel(cb.ax.get_xlabel(), fontsize=fontsize)  
     ### categorical legend
+    
     elif color_by_categorical is not None:
+        color_dict_categorical = dict(zip(color_categories, list(theme_colors.values())[:len(color_categories)]))
+        color_dict_categorical.update({"other": "lightgray", "minmax": "black"})
         leg = []
         for label,color in color_dict_categorical.items():
             if label != 'minmax':
                 leg.append(Line2D([0], [0], color=color, lw=7, 
                                 alpha=alpha_base, label=label))
+        
         _ = ax.legend(handles=leg, loc='lower center', 
-                      ncol=min(5, len(color_dict_categorical)),
+                      ncol=5 if len(color_dict_categorical) > 8 else len(color_dict_categorical),
                       bbox_to_anchor=[0.46,-0.07], frameon=False, fontsize=22)
     
     ### add a title to the figure
