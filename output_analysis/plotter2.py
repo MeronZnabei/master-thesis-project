@@ -20,7 +20,11 @@ theme_colors.update(
         "Best Utilitarian": "#f97306",
         "Best Prioritarian": "#DDA0DD",
         "Best Egalitarian": "#32CD32",
-        "other": "gray",
+        "Reference": "gray",
+        "Utilitarian": "#f97306",
+        "Prioritarian": "#DDA0DD",
+        "Egalitarian": "#32CD32",
+        "Other": "gray",
         "minmax": "black",
         "maroon": "#85200C",
         "pink": "#FF69B4",
@@ -191,32 +195,32 @@ def custom_parallel_coordinates(
             elif operator == '>=':
                 satisfice = np.logical_and(satisfice, obj_df.loc[:,col_idx] >= threshold)
  
-            ### add rectangle patch to plot to represent brushing
-            if operator != '!=':
-                threshold_norm = (threshold - bottoms[col_idx]) / (tops[col_idx] - bottoms[col_idx])
-                if ideal_direction == 'top' and minmaxs[col_idx] == 'max':
-                    if operator in ['<', '<=']:
-                        rect = Rectangle([col_idx-0.05, threshold_norm], 0.1, 1-threshold_norm)
-                    elif operator in ['>', '>=']:
-                        rect = Rectangle([col_idx-0.05, 0], 0.1, threshold_norm)
-                elif ideal_direction == 'top' and minmaxs[col_idx] == 'min':
-                    if operator in ['<', '<=']:
-                        rect = Rectangle([col_idx-0.05, 0], 0.1, threshold_norm)
-                    elif operator in ['>', '>=']:
-                        rect = Rectangle([col_idx-0.05, threshold_norm], 0.1, 1-threshold_norm)
-                if ideal_direction == 'bottom' and minmaxs[col_idx] == 'max':
-                    if operator in ['<', '<=']:
-                        rect = Rectangle([col_idx-0.05, 0], 0.1, threshold_norm)
-                    elif operator in ['>', '>=']:
-                        rect = Rectangle([col_idx-0.05, threshold_norm], 0.1, 1-threshold_norm)
-                elif ideal_direction == 'bottom' and minmaxs[col_idx] == 'min':
-                    if operator in ['<', '<=']:
-                        rect = Rectangle([col_idx-0.05, threshold_norm], 0.1, 1-threshold_norm)
-                    elif operator in ['>', '>=']:
-                        rect = Rectangle([col_idx-0.05, 0], 0.1, threshold_norm)
+            # ### add rectangle patch to plot to represent brushing
+            # if operator != '!=':
+            #     threshold_norm = (threshold - bottoms[col_idx]) / (tops[col_idx] - bottoms[col_idx])
+            #     if ideal_direction == 'top' and minmaxs[col_idx] == 'max':
+            #         if operator in ['<', '<=']:
+            #             rect = Rectangle([col_idx-0.05, threshold_norm], 0.1, 1-threshold_norm)
+            #         elif operator in ['>', '>=']:
+            #             rect = Rectangle([col_idx-0.05, 0], 0.1, threshold_norm)
+            #     elif ideal_direction == 'top' and minmaxs[col_idx] == 'min':
+            #         if operator in ['<', '<=']:
+            #             rect = Rectangle([col_idx-0.05, 0], 0.1, threshold_norm)
+            #         elif operator in ['>', '>=']:
+            #             rect = Rectangle([col_idx-0.05, threshold_norm], 0.1, 1-threshold_norm)
+            #     if ideal_direction == 'bottom' and minmaxs[col_idx] == 'max':
+            #         if operator in ['<', '<=']:
+            #             rect = Rectangle([col_idx-0.05, 0], 0.1, threshold_norm)
+            #         elif operator in ['>', '>=']:
+            #             rect = Rectangle([col_idx-0.05, threshold_norm], 0.1, 1-threshold_norm)
+            #     elif ideal_direction == 'bottom' and minmaxs[col_idx] == 'min':
+            #         if operator in ['<', '<=']:
+            #             rect = Rectangle([col_idx-0.05, threshold_norm], 0.1, 1-threshold_norm)
+            #         elif operator in ['>', '>=']:
+            #             rect = Rectangle([col_idx-0.05, 0], 0.1, threshold_norm)
                      
-                pc = PatchCollection([rect], facecolor='grey', alpha=0.5, zorder=3)
-                ax.add_collection(pc)
+            #     pc = PatchCollection([rect], facecolor='grey', alpha=0.5, zorder=3)
+            #     ax.add_collection(pc)
 
     ### loop over all solutions/rows & plot on parallel axis plot
     for i in range(objs_reorg.shape[0]):
@@ -243,16 +247,20 @@ def custom_parallel_coordinates(
             if satisfice.loc[i]:
                 alpha = alpha_base
                 lw = lw_base
-            elif obj_df.loc[i,color_by_categorical] == 'minmax':
-                alpha = 0
-                lw = 0
             else:
                 alpha = alpha_brush
                 lw = lw_base
                 zorder = 2
         else:
             alpha = alpha_base
-            lw = lw_base    
+            lw = lw_base 
+
+        ### finally if we have multiple parallelcooridnates plots the minmax border lines are set to transparent 
+        if minmax_df is not None and i == objs_reorg.shape[0]-1 or i == objs_reorg.shape[0]-2:
+            print(i)
+            alpha = 0
+            lw = 0
+
         ### loop over objective/column pairs & plot lines between parallel axes
         for j in range(objs_reorg.shape[1]-1):
             y = [objs_reorg.iloc[i, j], objs_reorg.iloc[i, j+1]]
@@ -316,17 +324,24 @@ def custom_parallel_coordinates(
     ### categorical legend
     
     elif color_by_categorical is not None:
-        color_dict_categorical = dict(zip(color_categories, list(theme_colors.values())[:len(color_categories)]))
-        color_dict_categorical.update({"other": "lightgray", "minmax": "black"})
+        if len(color_categories) == 3:
+            color_dict_categorical = {      
+                "Best Utilitarian": "#f97306",
+                "Best Prioritarian": "#DDA0DD",
+                "Best Egalitarian": "#32CD32",
+                }
+        else:
+            color_dict_categorical = dict(zip(color_categories, list(theme_colors.values())[:len(color_categories)]))
+        color_dict_categorical.update({"Other": "lightgray", "minmax": "black"})
         leg = []
         for label,color in color_dict_categorical.items():
             if label != 'minmax':
                 leg.append(Line2D([0], [0], color=color, lw=7, 
                                 alpha=alpha_base, label=label))
         
-        _ = ax.legend(handles=leg, loc='lower center', 
+        _ = ax.legend(handles=leg, loc='upper center', 
                       ncol=5 if len(color_dict_categorical) > 8 else len(color_dict_categorical),
-                      bbox_to_anchor=[0.46,-0.07], frameon=False, fontsize=22)
+                      bbox_to_anchor=[0.46, 0.125], frameon=False, fontsize=22)
     
     ### add a title to the figure
     if title: 
