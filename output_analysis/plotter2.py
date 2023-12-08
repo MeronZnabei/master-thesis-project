@@ -16,7 +16,7 @@ theme_colors.update(
         "Best Egypt HAD": "#08a9e5", 
         "Best Sudan Irr": "#ff0014",
         "Best Sudan 90$^{th}$": "#b20000",
-        "Best Ethiopia Hydro": "#ffd700",
+        "Best Ethiopia HP": "#ffd700",
         "Best Utilitarian": "#f97306",
         "Best Prioritarian": "#DDA0DD",
         "Best Egalitarian": "#32CD32",
@@ -256,7 +256,7 @@ def custom_parallel_coordinates(
             lw = lw_base 
 
         ### finally if we have multiple parallelcooridnates plots the minmax border lines are set to transparent 
-        if minmax_df is not None and i == objs_reorg.shape[0]-1 or i == objs_reorg.shape[0]-2:
+        if minmax_df is not None and (i == objs_reorg.shape[0]-1 or i == objs_reorg.shape[0]-2):
             print(i)
             alpha = 0
             lw = 0
@@ -269,11 +269,14 @@ def custom_parallel_coordinates(
      
     ### add top/bottom ranges with one decimal point precision
     for j in range(len(columns_axes)):
-        ax.annotate(f"{tops[j]:.1f}", [j, 1.02], ha='center', va='bottom', 
+        top_label = f"{tops[j]:.1f}" if not j == 7 else f"{int(tops[j])}"
+        bottom_label = f"{bottoms[j]:.1f}" if not j == 7 else f"{int(bottoms[j])}"
+
+        ax.annotate(top_label, [j, 1.02], ha='center', va='bottom', 
                     zorder=5, fontsize=fontsize)
-        ax.annotate(f"{bottoms[j]:.1f}", [j, -0.02], ha='center', va='top', 
+        ax.annotate(bottom_label, [j, -0.02], ha='center', va='top', 
                     zorder=5, fontsize=fontsize)  
-        ax.plot([j,j], [0,1], c='lightgray', zorder=1)
+        ax.plot([j, j], [0, 1], c='lightgray', zorder=1)
      
     ### other aesthetics
     ax.set_xticks([])
@@ -314,9 +317,10 @@ def custom_parallel_coordinates(
         mappable = cm.ScalarMappable(cmap=color_palette_continuous)
         mappable.set_clim(vmin=obj_df[color_by_continuous].min(), 
                           vmax=obj_df[color_by_continuous].max())
-        cb = plt.colorbar(mappable, ax=ax, orientation='horizontal', shrink=0.4, 
-                          label=col_axis_dict[color_by_continuous], pad=0.03, 
+        cb = plt.colorbar(mappable, ax=ax, orientation='horizontal', shrink=0.6, pad = -0.07, 
+                          label=col_axis_dict[color_by_continuous], 
                           alpha=alpha_base)
+        cb.ax.tick_params(labelsize=22)
         if colorbar_ticks_continuous is not None:
             _ = cb.ax.set_xticks(colorbar_ticks_continuous, colorbar_ticks_continuous, 
                                  fontsize=fontsize)

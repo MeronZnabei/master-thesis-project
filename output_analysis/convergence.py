@@ -95,6 +95,7 @@ def run(description:str, experiments:list, n_seeds:int):
         principle = get_principle(experiment)
         em_model = create_em_model(principle)
         problem = to_problem(em_model, searchover="levers")
+        print(subfolderpath, principle)
 
         # Dictionaries to store results and convergences for different seeds
         results_seeds = {}
@@ -102,6 +103,7 @@ def run(description:str, experiments:list, n_seeds:int):
         archives_seeds = {}
 
         for seed in range(n_seeds):
+            print("At seed: ", seed)
             # Construct the file paths for the results and convergence CSV files for the current experiment.
             results_filepath = f"{subfolderpath}/baseline_results_{experiment}_s{seed}.csv"
             convergence_filepath = f"{subfolderpath}/baseline_convergence_{experiment}_s{seed}.csv"

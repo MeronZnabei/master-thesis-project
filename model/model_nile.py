@@ -127,7 +127,7 @@ class ModelNile:
             Parameter values for the reservoir control policy
             object (NN, RBF etc.)
         principle : str
-            The principle on which the principle objective is calculated.
+            The principle with which the principle objective is calculated.
 
         Returns
         -------
