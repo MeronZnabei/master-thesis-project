@@ -1,0 +1,2 @@
+experiment uwf_001_demand took 18:19:23.819726 time to do 50000 NFEs with 
+            a convergence frequency of 2500 and epsilons: [0.01, 0.01, 0.05, 0.05, 0.05, 0.025, 0.1], for principle uwf and 5 seeds.

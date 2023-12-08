@@ -1,7 +1,7 @@
 # project output folders
 
-outputs/
-plots/
+outputs_old/
+# plots/
 readme_images/
 # batch scripts
 *.sh
