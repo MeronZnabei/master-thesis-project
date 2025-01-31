@@ -2,20 +2,26 @@
 
 ## Case of Nile River Basin
 
-This repository includes the code associated with the [MSc. thesis project](https://repository.tudelft.nl/islandora/object/uuid%3Aba09fa13-5331-446c-bf5e-48f6a29042ca?collection=education) of Yasin Sari as the partial requirement for the Engineering and Policy Analysis programme of TU Delft. It concerns the model of the Eastern Nile System built from the perspective of the evolutionary multi-objective direct policy search (EMODPS) framework. 
+This repository includes the code associated with the [MSc. thesis project](https://resolver.tudelft.nl/uuid:d881ffe2-a11d-463c-91b5-ff17c5aadc27) of Meron Znabei as the partial requirement for the Engineering and Policy Analysis programme of TU Delft. It concerns the model of the Eastern Nile System built from the perspective of the evolutionary multi-objective direct policy search (EMODPS) framework. 
 
  The model includes 4 reservoirs -- namely the Grand Ethiopian Renaissance Dam (GERD), Roseires, Sennar, and High Aswan Dam (HAD) as in figure 1.
 
- ![image info](readme_images/topological.png)
+ ![image info](readme_images/Topological.png)
 <figcaption align = "center"><b>Figure 1 - Topological overview of the modelled system</b></figcaption>
 
- Policies which govern release decisions for these reservoirs are optimised with respect to six objectives that are presented in figure 2:
+ Policies which govern release decisions for these reservoirs are optimised with respect to six country specific objectives and three aggregated objectives based on different Distributive Justice Principles, all presented in figure 2:
 
-![image info](readme_images/objectives.png)
+![image info](readme_images/ObjectivesBroad.png)
 <figcaption align = "center"><b>Figure 2 - Objectives of the optimisation problem</b></figcaption>
 
+## Understanding the inner workings of the Model
 
-Following the EMODPS methodology, release decisions are made by using a closed loop control policy that returns the decisions conditioned on dynamic inputs. Candidate control policies are initialised as a collection of radial basis functions (RBF). The aim of the optimisation is to find the parameter values of the release policies for near Pareto-optimal solutions. Users can resimulate optimised policies to obtain the performance metrics and physical quantities of the system with a particular policy. Various uncertainty analyses described in the thesis report can also be found in the output analysis section.
+Following the EMODPS methodology, release decisions are made by using a closed loop control policy that returns the decisions conditioned on dynamic inputs. Candidate control policies are initialised as a collection of radial basis functions (RBF). These are used for model simulation. The aim of the optimisation is to find the parameter values of the release policies for near Pareto-optimal solutions. Created policies are evaluated using the objectives from above for optimisation. The model flowchart in figure 3 can be used to understand these steps and the overall model logic. Users can resimulate optimised policies to obtain the performance metrics and physical quantities of the system with a particular policy. Various uncertainty analyses described in the thesis report can also be found in the output analysis section.
+
+![image info](readme_images/Model_Flowchart.png)
+<figcaption align = "center"><b>Figure 3 -  The model flowchart with sub-flowcharts providing a zoom in on the simulation and evaluation steps.
+</b></figcaption>
+
 
 <!-- <!-- ## Repository Structure -->
 

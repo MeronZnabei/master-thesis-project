@@ -353,3 +353,6 @@ def custom_parallel_coordinates(
     ### save figure
     if save_fig_filename is not None:
         plt.savefig(save_fig_filename, bbox_inches='tight', dpi=300)
+        # Save the figure as SVG and PDF
+        plt.savefig(save_fig_filename, bbox_inches='tight', dpi=300, format='svg')
+        plt.savefig(save_fig_filename, bbox_inches='tight', dpi=300, format='pdf')
