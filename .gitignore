@@ -2,7 +2,7 @@
 
 outputs_old/
 # plots/
-readme_images/
+# readme_images/
 # batch scripts
 *.sh
 #################

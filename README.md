@@ -440,6 +440,10 @@ master-thesis-project
 │     ├─ styled_regret.xlsx
 │     └─ styled_sensitivity.xlsx
 ├─ README.md
+├─ readme_images
+│  ├─ Model_Flowchart.png
+│  ├─ ObjectivesBroad.png
+│  └─ Topological.png
 ├─ requirements.txt
 ├─ settings
 │  ├─ settings_file_Nile.xlsx
